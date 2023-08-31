@@ -18,22 +18,22 @@ public class Main {
     private static final String MP4_SUFFIX = ".mp4";
 
     public static void main(String[] args) {
+        //open java file chooser
         JFileChooser fileChooser = new JFileChooser(FileSystemView.getFileSystemView().getHomeDirectory());
-        fileChooser.setDialogTitle("选择文件夹");
+        fileChooser.setDialogTitle("choose directory");
         fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-
+        //set base path
         int returnValue = fileChooser.showOpenDialog(null);
         if (returnValue == JFileChooser.APPROVE_OPTION) {
-            System.out.println("你选择的文件夹是：" + fileChooser.getSelectedFile());
+            BASE_PATH = fileChooser.getSelectedFile() + "/";
         }
-        BASE_PATH = fileChooser.getSelectedFile() + "/";
-
+        //find subtitles files
         List<String> originalSubtitlesFileNames = readFileNameBySuffix(SUBTITLES_SUFFIX);
         if (originalSubtitlesFileNames.size() == 0) {
             System.out.println("Can not find subtitles");
             return;
         }
-
+        //find mp4 or mkv files
         List<String> videoFileNames = readFileNameBySuffix(MKV_SUFFIX);
         if (videoFileNames.size() == 0) {
             videoFileNames = readFileNameBySuffix(MP4_SUFFIX);
@@ -42,29 +42,32 @@ public class Main {
             System.out.println("Can not find mkv or mp4 videos");
             return;
         }
-
+        //check the number of videos and subtitles is consistent
         if (originalSubtitlesFileNames.size() != videoFileNames.size()) {
+            //get real video file names
             videoFileNames = getRealVideoFileNames(videoFileNames);
         }
-
+        //get the same prefix
         String sameOriginalSubtitlesPrefix = getSamePrefix(originalSubtitlesFileNames.get(0), originalSubtitlesFileNames.get(1));
         String sameVideoPrefix = getSamePrefix(videoFileNames.get(0), videoFileNames.get(1));
-
+        //Based on the same prefix,sort the file names.
         originalSubtitlesFileNames = sortFileNames(originalSubtitlesFileNames, sameOriginalSubtitlesPrefix);
         videoFileNames = sortFileNames(videoFileNames, sameVideoPrefix);
-
+        //rename subtitles files by list index
         renameSubtitlesFileNames(originalSubtitlesFileNames, videoFileNames);
-
     }
 
     public static List<String> readFileNameBySuffix(final String suffix) {
         File folder = new File(BASE_PATH);
+        //set filter
         FilenameFilter filter = (dir, name) -> name.endsWith(suffix);
+        //get filenames
         String[] temp = folder.list(filter);
-        // remove suffix
+        //remove suffix
         List<String> result = new ArrayList<>();
         if (temp != null) {
             for (String s : temp) {
+                //If u change subtitles format,remember change this number.
                 result.add(s.substring(0, s.length() - 4));
             }
         }
